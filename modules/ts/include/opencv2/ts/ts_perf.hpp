@@ -427,6 +427,11 @@ protected:
     InstumentData instrConf;
 #endif
 
+    // IPP extensions
+    bool ippNotExact;
+    bool defaultExact;
+    int  ippDefaultThreads;
+
 private:
     typedef std::vector<std::pair<int, cv::Size> > SizeVector;
     typedef std::vector<int64> TimeVector;

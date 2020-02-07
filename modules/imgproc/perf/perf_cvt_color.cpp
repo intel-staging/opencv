@@ -205,6 +205,8 @@ static ChPair getConversionInfo(int cvtMode)
     case COLOR_BayerGB2BGR: case COLOR_BayerGB2BGR_VNG:
     case COLOR_BayerGR2BGR: case COLOR_BayerGR2BGR_VNG:
     case COLOR_BayerRG2BGR: case COLOR_BayerRG2BGR_VNG:
+	case COLOR_BayerBG2BGR_EA: case COLOR_BayerGB2BGR_EA:
+    case COLOR_BayerRG2BGR_EA: case COLOR_BayerGR2BGR_EA:
     case COLOR_GRAY2BGR:
     case COLOR_YUV2BGR_NV12: case COLOR_YUV2RGB_NV12:
     case COLOR_YUV2BGR_NV21: case COLOR_YUV2RGB_NV21:
@@ -306,6 +308,8 @@ static ChPair getConversionInfo(int cvtMode)
     case CX_RGBA2YCrCb: case CX_RGBA2YUV:
         return ChPair(4,3);
     case COLOR_BGRA2RGBA:
+	case COLOR_RGBA2mRGBA:
+    case COLOR_mRGBA2RGBA:
         return ChPair(4,4);
     default:
         ADD_FAILURE() << "Unknown conversion type";

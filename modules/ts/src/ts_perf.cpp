@@ -1672,6 +1672,9 @@ void TestBase::reportMetrics(bool toJUnitXML)
     }
     else if (toJUnitXML)
     {
+        // IPP extensions
+        RecordProperty("ippNotExact", (int)ippNotExact);
+
         RecordProperty("bytesIn", (int)m.bytesIn);
         RecordProperty("bytesOut", (int)m.bytesOut);
         RecordProperty("term", m.terminationReason);
@@ -1807,6 +1810,11 @@ void TestBase::SetUp()
         setCurrentThreadAffinityMask(param_affinity_mask);
 #endif
 
+    // IPP extensions
+    ippNotExact = false;
+    defaultExact = cv::ipp::useIPP_NotExact();
+    ippDefaultThreads = cv::getNumThreads();
+
     verified = false;
     lastTime = 0;
     totalTime = 0;
@@ -1820,6 +1828,10 @@ void TestBase::SetUp()
 
 void TestBase::TearDown()
 {
+    // IPP extensions
+    cv::setNumThreads(ippDefaultThreads);
+    cv::ipp::setUseIPP_NotExact(defaultExact);
+
     if (metrics.terminationReason == performance_metrics::TERM_SKIP_TEST)
     {
         //LOGI("\tTest was skipped");
