@@ -74,7 +74,7 @@ TEST_P(ML_ANN_Params, ActivationFunction)
     }
 }
 
-INSTANTIATE_TEST_CASE_P(/**/, ML_ANN_Params, testing::ValuesIn(activation_list));
+//INSTANTIATE_TEST_CASE_P(/**/, ML_ANN_Params, testing::ValuesIn(activation_list)); temporary disabled, https://github.com/opencv/opencv/issues/26232
 
 //==================================================================================================
 
