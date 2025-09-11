@@ -23,6 +23,8 @@
 # include "ipp.h"
 #endif
 
+#if !defined(CV_INSTRUMENT_FUN_IPP)
 #define CV_INSTRUMENT_FUN_IPP(FUN, ...) ((FUN)(__VA_ARGS__))
+#endif
 
 #endif
