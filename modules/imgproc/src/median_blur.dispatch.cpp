@@ -110,7 +110,7 @@ static bool ocl_medianFilter(InputArray _src, OutputArray _dst, int m)
 
 #endif
 
-#if 0 //defined HAVE_IPP
+#if defined HAVE_IPP
 static bool ipp_medianFilter(Mat &src0, Mat &dst, int ksize)
 {
     CV_INSTRUMENT_REGION_IPP();
@@ -129,6 +129,9 @@ static bool ipp_medianFilter(Mat &src0, Mat &dst, int ksize)
         IppAutoBuffer<Ipp8u> buffer;
 
         if(src0.isSubmatrix())
+            return false;
+
+        if(ksize == 3 && (dst.total() < 320*240 || src0.channels() >= 4))
             return false;
 
         Mat src;
@@ -207,7 +210,7 @@ void medianBlur( InputArray _src0, OutputArray _dst, int ksize )
     CALL_HAL(medianBlur, cv_hal_medianBlur, src0.data, src0.step, dst.data, dst.step, src0.cols, src0.rows, src0.depth(),
              src0.channels(), ksize);
 
-    //CV_IPP_RUN_FAST(ipp_medianFilter(src0, dst, ksize));
+    CV_IPP_RUN_FAST(ipp_medianFilter(src0, dst, ksize));
 
     CV_CPU_DISPATCH(medianBlur, (src0, dst, ksize),
         CV_CPU_DISPATCH_MODES_ALL);
