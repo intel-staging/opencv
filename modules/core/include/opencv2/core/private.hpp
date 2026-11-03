@@ -194,8 +194,6 @@ T* allocSingletonNew() { return new(allocSingletonNewBuffer(sizeof(T))) T(); }
 #define OPENCV_IPP_REDUCE_SIZE 1
 
 // Temporary disabled named IPP region. Accuracy
-#define IPP_DISABLE_PYRAMIDS_UP         1 // Different results
-#define IPP_DISABLE_PYRAMIDS_DOWN       1 // Different results
 #define IPP_DISABLE_PYRAMIDS_BUILD      1 // Different results
 #define IPP_DISABLE_REMAP               1 // Different results
 #define IPP_DISABLE_YUV_RGB             1 // accuracy difference
