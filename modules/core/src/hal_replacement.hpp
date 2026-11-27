@@ -1294,6 +1294,27 @@ inline int hal_ni_sum(const uchar *src_data, size_t src_step, int src_type, int 
 //! @endcond
 
 /**
+ @brief Reduces a 2D matrix to a single row (dim = 0) or a single column (dim = 1)
+ @param src_data Source image data
+ @param src_step Source image step
+ @param src_type Source image type (depth and number of channels)
+ @param width, height Source image dimensions
+ @param dst_data Destination data: 1 x width for dim = 0, height x 1 for dim = 1
+ @param dst_step Destination step
+ @param dst_type Destination type, has the same number of channels as the source
+ @param dim Dimension index along which the matrix is reduced: 0 or 1
+ @param op Reduction operation: cv::REDUCE_SUM, cv::REDUCE_MAX, cv::REDUCE_MIN or cv::REDUCE_SUM2.
+           cv::REDUCE_AVG is passed as cv::REDUCE_SUM, the caller scales the result.
+ */
+inline int hal_ni_reduce(const uchar* src_data, size_t src_step, int src_type, int width, int height,
+                         uchar* dst_data, size_t dst_step, int dst_type, int dim, int op)
+{ return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+
+//! @cond IGNORED
+#define cv_hal_reduce hal_ni_reduce
+//! @endcond
+
+/**
    @brief inRange (lower_bound <= src_value) && (src_value <= upper_bound) ? 255 : 0
    @param src_data Source image data
    @param src_step Source image step

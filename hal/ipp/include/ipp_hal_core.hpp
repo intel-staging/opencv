@@ -60,6 +60,12 @@ int ipp_hal_sum(const uchar *src_data, size_t src_step, int src_type, int width,
 #undef cv_hal_sum
 #define cv_hal_sum ipp_hal_sum
 
+int ipp_hal_reduce(const uchar* src_data, size_t src_step, int src_type, int width, int height,
+                   uchar* dst_data, size_t dst_step, int dst_type, int dim, int op);
+
+#undef cv_hal_reduce
+#define cv_hal_reduce ipp_hal_reduce
+
 #endif
 
 int ipp_hal_polarToCart32f(const float* mag, const float* angle, float* x, float* y, int len, bool angleInDegrees);

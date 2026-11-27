@@ -6,7 +6,6 @@
 #include "opencv2/core/mat.hpp"
 #include "opencl_kernels_core.hpp"
 
-#define IPP_DISABLE_REDUCE 1
 #define IPP_DISABLE_SORT   0
 
 /*************************************************************************************************\
@@ -512,81 +511,6 @@ typedef void (*ReduceFunc)( const Mat& src, Mat& dst );
 #define reduceMinR8s  reduceR_<schar, schar, OpMin<schar> >
 #define reduceMinR32s reduceR_<int,   int,   OpMin<int> >
 
-#if defined(HAVE_IPP) && !IPP_DISABLE_REDUCE
-static inline bool ipp_reduceSumC_8u16u16s32f_64f(const cv::Mat& srcmat, cv::Mat& dstmat)
-{
-    int sstep = (int)srcmat.step, stype = srcmat.type(),
-            ddepth = dstmat.depth();
-
-    IppiSize roisize = { srcmat.size().width, 1 };
-
-    typedef IppStatus (CV_STDCALL * IppiSum)(const void * pSrc, int srcStep, IppiSize roiSize, Ipp64f* pSum);
-    typedef IppStatus (CV_STDCALL * IppiSumHint)(const void * pSrc, int srcStep, IppiSize roiSize, Ipp64f* pSum, IppHintAlgorithm hint);
-    IppiSum ippiSum = 0;
-    IppiSumHint ippiSumHint = 0;
-
-    if(ddepth == CV_64F)
-    {
-        ippiSum =
-            stype == CV_8UC1 ? (IppiSum)ippiSum_8u_C1R :
-            stype == CV_8UC3 ? (IppiSum)ippiSum_8u_C3R :
-            stype == CV_8UC4 ? (IppiSum)ippiSum_8u_C4R :
-            stype == CV_16UC1 ? (IppiSum)ippiSum_16u_C1R :
-            stype == CV_16UC3 ? (IppiSum)ippiSum_16u_C3R :
-            stype == CV_16UC4 ? (IppiSum)ippiSum_16u_C4R :
-            stype == CV_16SC1 ? (IppiSum)ippiSum_16s_C1R :
-            stype == CV_16SC3 ? (IppiSum)ippiSum_16s_C3R :
-            stype == CV_16SC4 ? (IppiSum)ippiSum_16s_C4R : 0;
-        ippiSumHint =
-            stype == CV_32FC1 ? (IppiSumHint)ippiSum_32f_C1R :
-            stype == CV_32FC3 ? (IppiSumHint)ippiSum_32f_C3R :
-            stype == CV_32FC4 ? (IppiSumHint)ippiSum_32f_C4R : 0;
-    }
-
-    if(ippiSum)
-    {
-        for(int y = 0; y < srcmat.size().height; y++)
-        {
-            if(CV_INSTRUMENT_FUN_IPP(ippiSum, srcmat.ptr(y), sstep, roisize, dstmat.ptr<Ipp64f>(y)) < 0)
-                return false;
-        }
-        return true;
-    }
-    else if(ippiSumHint)
-    {
-        for(int y = 0; y < srcmat.size().height; y++)
-        {
-            if(CV_INSTRUMENT_FUN_IPP(ippiSumHint, srcmat.ptr(y), sstep, roisize, dstmat.ptr<Ipp64f>(y), ippAlgHintAccurate) < 0)
-                return false;
-        }
-        return true;
-    }
-
-    return false;
-}
-
-static inline void reduceSumC_8u16u16s32f_64f(const cv::Mat& srcmat, cv::Mat& dstmat)
-{
-    CV_IPP_RUN_FAST(ipp_reduceSumC_8u16u16s32f_64f(srcmat, dstmat));
-
-    cv::ReduceFunc func = 0;
-
-    if(dstmat.depth() == CV_64F)
-    {
-        int sdepth = CV_MAT_DEPTH(srcmat.type());
-        func =
-            sdepth == CV_8U ? (cv::ReduceFunc)cv::reduceC_<uchar, double,   cv::OpAdd<double> > :
-            sdepth == CV_16U ? (cv::ReduceFunc)cv::reduceC_<ushort, double,   cv::OpAdd<double> > :
-            sdepth == CV_16S ? (cv::ReduceFunc)cv::reduceC_<short, double,   cv::OpAdd<double> > :
-            sdepth == CV_32F ? (cv::ReduceFunc)cv::reduceC_<float, double,   cv::OpAdd<double> > : 0;
-    }
-    CV_Assert(func);
-
-    func(srcmat, dstmat);
-}
-
-#endif
-
 #define reduceSumC8u32s  reduceC_<uchar, int,   OpAdd<int>, OpNop<int> >
 #define reduceSumC8u32f  reduceC_<uchar, float, OpAdd<int>, OpNop<int> >
 #define reduceSumC16u32f reduceC_<ushort,float, OpAdd<float> >
@@ -609,72 +533,26 @@ static inline void reduceSumC_8u16u16s32f_64f(const cv::Mat& srcmat, cv::Mat& ds
 #define reduceSum2C8s64f  reduceC_<schar, double,OpAddSqr<int>,   OpSqr<int> >
 #define reduceSum2C32s64f reduceC_<int,   double,OpAddSqr<double>,OpSqr<double> >
 
-#if defined(HAVE_IPP) && !IPP_DISABLE_REDUCE
-#define reduceSumC8u64f  reduceSumC_8u16u16s32f_64f
-#define reduceSumC16u64f reduceSumC_8u16u16s32f_64f
-#define reduceSumC16s64f reduceSumC_8u16u16s32f_64f
-#define reduceSumC32f64f reduceSumC_8u16u16s32f_64f
-#else
 #define reduceSumC8u64f  reduceC_<uchar, double,OpAdd<int>, OpNop<int> >
 #define reduceSumC16u64f reduceC_<ushort,double,OpAdd<double> >
 #define reduceSumC16s64f reduceC_<short, double,OpAdd<double> >
 #define reduceSumC32f64f reduceC_<float, double,OpAdd<double> >
-#endif
 
 #define reduceSum2C8u64f  reduceC_<uchar, double,OpAddSqr<int>,   OpSqr<int> >
 #define reduceSum2C16u64f reduceC_<ushort,double,OpAddSqr<double>,OpSqr<double> >
 #define reduceSum2C16s64f reduceC_<short, double,OpAddSqr<double>,OpSqr<double> >
 #define reduceSum2C32f64f reduceC_<float, double,OpAddSqr<double>,OpSqr<double> >
 
-#if defined(HAVE_IPP) && !IPP_DISABLE_REDUCE
-#define REDUCE_OP(favor, optype, type1, type2) \
-static inline bool ipp_reduce##optype##C##favor(const cv::Mat& srcmat, cv::Mat& dstmat) \
-{ \
-    if((srcmat.channels() == 1)) \
-    { \
-        int sstep = (int)srcmat.step; \
-        typedef Ipp##favor IppType; \
-        IppiSize roisize = ippiSize(srcmat.size().width, 1);\
-        for(int y = 0; y < srcmat.size().height; y++)\
-        {\
-            if(CV_INSTRUMENT_FUN_IPP(ippi##optype##_##favor##_C1R, srcmat.ptr<IppType>(y), sstep, roisize, dstmat.ptr<IppType>(y)) < 0)\
-                return false;\
-        }\
-        return true;\
-    }\
-    return false; \
-} \
-static inline void reduce##optype##C##favor(const cv::Mat& srcmat, cv::Mat& dstmat) \
-{ \
-    CV_IPP_RUN_FAST(ipp_reduce##optype##C##favor(srcmat, dstmat)); \
-    cv::reduceC_ < type1, type2, cv::Op##optype < type2 > >(srcmat, dstmat); \
-}
-#endif
-
-#if defined(HAVE_IPP) && !IPP_DISABLE_REDUCE
-REDUCE_OP(8u, Max, uchar, uchar)
-REDUCE_OP(16u, Max, ushort, ushort)
-REDUCE_OP(16s, Max, short, short)
-REDUCE_OP(32f, Max, float, float)
-#else
 #define reduceMaxC8u  reduceC_<uchar, uchar, OpMax<uchar> >
 #define reduceMaxC16u reduceC_<ushort,ushort,OpMax<ushort> >
 #define reduceMaxC16s reduceC_<short, short, OpMax<short> >
 #define reduceMaxC32f reduceC_<float, float, OpMax<float> >
-#endif
 #define reduceMaxC64f reduceC_<double,double,OpMax<double> >
 
-#if defined(HAVE_IPP) && !IPP_DISABLE_REDUCE
-REDUCE_OP(8u, Min, uchar, uchar)
-REDUCE_OP(16u, Min, ushort, ushort)
-REDUCE_OP(16s, Min, short, short)
-REDUCE_OP(32f, Min, float, float)
-#else
 #define reduceMinC8u  reduceC_<uchar, uchar, OpMin<uchar> >
 #define reduceMinC16u reduceC_<ushort,ushort,OpMin<ushort> >
 #define reduceMinC16s reduceC_<short, short, OpMin<short> >
 #define reduceMinC32f reduceC_<float, float, OpMin<float> >
-#endif
 #define reduceMinC64f reduceC_<double,double,OpMin<double> >
 #define reduceMaxC8s  reduceC_<schar, schar, OpMax<schar> >
 #define reduceMaxC32s reduceC_<int,   int,   OpMax<int> >
@@ -853,6 +731,19 @@ void cv::reduce(InputArray _src, OutputArray _dst, int dim, int op, int dtype)
             ddepth = CV_32S;
         }
     }
+
+    // CALL_HAL would return before the REDUCE_AVG scaling below
+    int halRes = cv_hal_reduce(src.data, src.step, src.type(), src.cols, src.rows,
+                               temp.data, temp.step, temp.type(), dim, op);
+    if( halRes == CV_HAL_ERROR_OK )
+    {
+        if( op0 == REDUCE_AVG )
+            temp.convertTo(dst, dst.type(), 1./(dim == 0 ? src.rows : src.cols));
+        return;
+    }
+    else if( halRes != CV_HAL_ERROR_NOT_IMPLEMENTED )
+        CV_Error_(cv::Error::StsInternal,
+                  ("HAL implementation reduce ==> " CVAUX_STR(cv_hal_reduce) " returned %d (0x%08x)", halRes, halRes));
 
     ReduceFunc func = 0;
     if( dim == 0 )
